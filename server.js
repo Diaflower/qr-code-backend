@@ -1,10 +1,14 @@
 const express = require("express");
 const shortid = require("shortid");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 10000;
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Use the MONGODB_URI from environment variables
 const uri = process.env.MONGODB_URI;
