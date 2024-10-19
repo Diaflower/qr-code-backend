@@ -83,6 +83,21 @@ connectToDatabase().then(() => {
     }
   });
 
+  app.delete("/delete/:shortCode", async (req, res) => {
+    const { shortCode } = req.params;
+    try {
+      const result = await db.collection("links").deleteOne({ shortCode });
+      if (result.deletedCount === 1) {
+        res.json({ message: "QR code deleted successfully" });
+      } else {
+        res.status(404).json({ error: "QR code not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting QR code:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
