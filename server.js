@@ -5,11 +5,10 @@ require("dotenv").config();
 const cors = require("cors");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 app.use(cors());
 
-const mongoURI = `mongodb+srv://rami:${process.env.DB_PASSWORD}@qrcode-scanner.scaps.mongodb.net/qr_tracker?retryWrites=true&w=majority&appName=qrcode-scanner`;
-
+const mongoURI = process.env.MONGODB_URI;
 mongoose
   .connect(mongoURI, {
     useNewUrlParser: true,
