@@ -7,13 +7,11 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Enable CORS for all routes
 app.use(cors());
+app.use(express.json());
 
-// Use the MONGODB_URI from environment variables
 const uri = process.env.MONGODB_URI;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -26,25 +24,17 @@ let db;
 
 async function connectToDatabase() {
   try {
-    // Connect the client to the server
     await client.connect();
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-
-    // Set the database to use
-    db = client.db("qr_tracker"); // Replace with your actual database name
+    console.log("Connected to MongoDB Atlas");
+    db = client.db("qr_tracker");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
     process.exit(1);
   }
 }
 
-// Connect to the database before starting the server
 connectToDatabase().then(() => {
-  // Define your routes here
   app.get("/create", async (req, res) => {
     const { url } = req.query;
     const shortCode = shortid.generate();
@@ -67,13 +57,14 @@ connectToDatabase().then(() => {
         await db
           .collection("links")
           .updateOne({ shortCode }, { $inc: { scanCount: 1 } });
-        res.redirect(link.originalUrl);
+        console.log(`Redirecting to: ${link.originalUrl}`);
+        return res.redirect(link.originalUrl);
       } else {
-        res.status(404).send("Not found");
+        return res.status(404).send("Short code not found");
       }
     } catch (error) {
       console.error("Error retrieving URL:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      return res.status(500).json({ error: "Internal Server Error" });
     }
   });
 
@@ -84,7 +75,7 @@ connectToDatabase().then(() => {
       if (link) {
         res.json({ scanCount: link.scanCount });
       } else {
-        res.status(404).send("Not found");
+        res.status(404).json({ error: "Short code not found" });
       }
     } catch (error) {
       console.error("Error retrieving stats:", error);
@@ -92,13 +83,11 @@ connectToDatabase().then(() => {
     }
   });
 
-  // Start the server
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
 });
 
-// Handle graceful shutdown
 process.on("SIGINT", async () => {
   await client.close();
   console.log("MongoDB connection closed");
